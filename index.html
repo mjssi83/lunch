@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘의 점심 메뉴</title>
+<meta property="og:title" content="오늘의 점심 메뉴">
+<meta property="og:description" content="봄봄 · 직당 오늘 메뉴 사진">
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1d1d1b;--sub:#6b6a66;--line:#e6e4df;--accent:#2f7d4f;--warn-bg:#fff6e0;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#20201e;--ink:#f1f0ec;--sub:#a3a29d;--line:#33322f;--accent:#6cc391;--warn-bg:#3a2f15;--warn:#f0c46a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:4px 0 2px}
+#date{color:var(--sub);margin:0 0 18px;font-size:15px}
+.grid{display:grid;gap:16px}
+@media (min-width:700px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card h2{font-size:17px;margin:0;padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 a{font-size:13px;font-weight:500;color:var(--accent);text-decoration:none;white-space:nowrap}
+.card img{display:block;width:100%;height:auto;cursor:zoom-in}
+.empty{margin:0 16px 16px;padding:14px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:14px}
+footer{margin-top:22px;color:var(--sub);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>오늘의 점심 메뉴</h1>
+  <p id="date">불러오는 중…</p>
+  <div class="grid" id="cards"></div>
+  <footer id="foot">매일 오전 자동 업데이트 · 메뉴는 매장 사정에 따라 바뀔 수 있어요</footer>
+</div>
+<script>
+const SHOPS=[
+  {key:"bombom",name:"봄봄 한식뷔페",link:"https://m.place.naver.com/place/34983845/feed",linkText:"네이버 소식"},
+  {key:"jikdang",name:"직당 중식 뷔페",link:"https://www.instagram.com/jikdang_seongsu/",linkText:"인스타그램"}
+];
+const today=new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Seoul"});
+const wd="일월화수목금토"[new Date(today+"T00:00:00").getDay()];
+const [y,m,d]=today.split("-").map(Number);
+document.getElementById("date").textContent=`${m}월 ${d}일 (${wd})`;
+fetch("data.json?t="+Date.now()).then(r=>r.json()).catch(()=>({})).then(data=>{
+  const box=document.getElementById("cards");
+  for(const s of SHOPS){
+    const info=data[s.key]||{};
+    const card=document.createElement("section");card.className="card";
+    card.innerHTML=`<h2><span>${s.name}</span><a href="${s.link}" target="_blank" rel="noopener">${s.linkText} ↗</a></h2>`;
+    if(info.date===today){
+      const a=document.createElement("a");a.href=info.file+"?v="+info.v;a.target="_blank";
+      const img=document.createElement("img");img.src=a.href;img.alt=s.name+" 오늘 메뉴";img.loading="lazy";
+      a.appendChild(img);card.appendChild(a);
+    }else{
+      const p=document.createElement("p");p.className="empty";
+      p.textContent="오늘 메뉴가 아직 올라오지 않았어요. 오른쪽 위 링크에서 직접 확인해 주세요.";
+      card.appendChild(p);
+    }
+    box.appendChild(card);
+  }
+  if(data.updated)document.getElementById("foot").textContent=`마지막 업데이트 ${data.updated.replace("T"," ")} · 메뉴는 매장 사정에 따라 바뀔 수 있어요`;
+});
+</script>
+</body>
+</html>
